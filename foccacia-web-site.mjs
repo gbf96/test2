@@ -3,8 +3,8 @@ export default function init(services) {
         siteAuthMiddleware,
         showLogin,
         processLogin,
-        showRegister,      // Nova função para mostrar o registo
-        processRegister,   // Nova função para processar o registo
+        showRegister,     
+        processRegister,  
         home,
         listGroups,
         showCreateGroup,
@@ -21,7 +21,6 @@ export default function init(services) {
         listTeamsByCompetition
     };
 
-    // Função auxiliar para tratamento de erros
     async function handleRequest(req, res, action, onError) {
         try {
             await action();
@@ -30,111 +29,93 @@ export default function init(services) {
             if (onError) {
                 await onError(message);
             } else {
-                console.error("Unhandled error:", message);
-                // Renderiza a view de grupos com erro genérico se não houver handler específico
                 res.render('groupsView', { error: message, user: req.user });
             }
         }
     }
  
-    // 1. Middleware de Autenticação com Passport
     async function siteAuthMiddleware(req, res, next) {
-        // req.isAuthenticated() é fornecido pelo Passport
         if (req.isAuthenticated()) {
-            res.locals.user = req.user; // Disponibiliza o user para todas as views
+            res.locals.user = req.user; 
             return next();
         }
-        // Se não estiver autenticado, redireciona para login
         res.redirect('/login');
     }
 
-    // 2. Mostrar Login (isRegister: false)
     function showLogin(req, res) {
         if (req.isAuthenticated()) return res.redirect('/groups');
         
-        // Reutiliza a view loginView, indicando que NÃO é registo
         res.render('loginView', { 
-            title: 'Login - FOCCACIA', 
+            title: 'Login', 
             isRegister: false 
         });
     }
 
-    // 3. Processar Login com req.login
     async function processLogin(req, res, next) {
         const { username, password } = req.body;
         
         if (!username || !password) {
             return res.render('loginView', { 
-                title: 'Login - FOCCACIA',
+                title: 'Login',
                 error: "Username and password are required", 
                 isRegister: false 
             });
         }
 
         try {
-            // Verifica as credenciais (Assume que services.verifyUser foi criado conforme passo anterior)
-            // Se não criou verifyUser, pode usar services.getUser(username) e comparar user.password == password
+
             const user = await services.verifyUser(username, password);
             
             if (!user) {
                 return res.render('loginView', { 
-                    title: 'Login - FOCCACIA',
+                    title: 'Login',
                     error: "Invalid username or password", 
                     isRegister: false 
                 });
             }
 
-            // Passport: Cria a sessão manualmente
             req.login(user, (err) => {
                 if (err) return next(err);
                 return res.redirect('/groups');
             });
 
         } catch (err) {
-            // Em caso de erro técnico
             res.render('loginView', { 
-                title: 'Login - FOCCACIA',
+                title: 'Login',
                 error: "Login failed: " + err.message, 
                 isRegister: false 
             });
         }
     }
 
-    // 4. Mostrar Registo (isRegister: true)
     function showRegister(req, res) {
         if (req.isAuthenticated()) return res.redirect('/groups');
 
-        // Reutiliza a mesma view, mas ativa o modo de registo
         res.render('loginView', { 
-            title: 'Register - FOCCACIA', 
+            title: 'Register', 
             isRegister: true 
         });
     }
 
-    // 5. Processar Registo e Auto-Login
     async function processRegister(req, res, next) {
         const { username, password } = req.body;
 
         try {
-            // Cria o utilizador (Assume que services.createUser aceita password agora)
             const newUser = await services.createUser(username, password);
             
-            // Passport: Login automático após registo
             req.login(newUser, (err) => {
                 if (err) return next(err);
                 res.redirect('/groups');
             });
         } catch (err) {
-            // Se o utilizador já existir ou houver outro erro, volta ao form de registo
             res.render('loginView', { 
-                title: 'Register - FOCCACIA',
-                error: err.message, // Ex: "User already exists"
+                title: 'Register',
+                error: err.message, 
                 isRegister: true 
             });
         }
     }
 
-    // 6. Logout com req.logout
     function logout(req, res, next) {
         req.logout((err) => {
             if (err) { return next(err); }

@@ -1,12 +1,9 @@
-import fetch from 'node-fetch'; // Certifique-se que tem o node-fetch ou use o fetch nativo do Node 18+
+import fetch from 'node-fetch'; 
 
 const URI_PREFIX = 'http://localhost:9200';
 const INDEX_USERS = 'foccacia-users';
 const INDEX_GROUPS = 'foccacia-groups';
 
-// --- Funções Auxiliares ---
-
-// Função genérica para fazer pedidos ao Elastic
 export function fetchElastic(method, path, body = undefined) {
     const options = {
         method: method,
@@ -23,7 +20,6 @@ export function fetchElastic(method, path, body = undefined) {
             
             const json = await response.json();
             
-            // Log de erro se o Elastic devolver algo inesperado (ex: erro 400)
             if (response.status >= 400) {
                 console.error(`[Elastic Error] ${method} ${path}:`, json);
             }
@@ -31,37 +27,26 @@ export function fetchElastic(method, path, body = undefined) {
         });
 }
 
-// Combina os dados do utilizador com o ID do Elastic (transforma _id em userId)
 function joinUserId(user, elasticId) {
-    if (!elasticId) {
-        console.error("AVISO: Tentativa de criar utilizador sem ID (elasticId undefined)");
-    }
     return Object.assign({ userId: elasticId }, user);
 }
 
-// Combina os dados do grupo com o ID do Elastic
 function joinGroupId(group, elasticId) {
     return Object.assign({ id: elasticId }, group);
 }
 
-// --- USERS (Autenticação e Sessão) ---
-
-// 1. Criar Utilizador (Registo)
 export async function saveUser(username, password) {
     const user = { username, password };
     
     return fetchElastic('POST', `/${INDEX_USERS}/_doc?refresh=wait_for`, user)
         .then(body => {
-            // VERIFICAÇÃO DE SEGURANÇA
             if (!body || !body._id) {
-                // Se o Elastic falhar (ex: 503), lançamos erro para o site tratar
-                throw new Error("Serviço de base de dados indisponível (ElasticSearch Error)");
+                throw new Error("Serviço de base de dados indisponível");
             }
             return joinUserId(user, body._id);
         });
 }
 
-// 2. Procurar por Username (Login)
 function _runUserQuery(queryBody) {
     return fetchElastic('POST', `/${INDEX_USERS}/_search`, { query: queryBody })
         .then(body => {
@@ -69,7 +54,6 @@ function _runUserQuery(queryBody) {
             if (!body.hits || body.hits.hits.length === 0) return undefined;
 
             const hit = body.hits.hits[0];
-            // Mapeia _source (dados) e _id (identificador)
             return joinUserId(hit._source, hit._id);
         });
 }
@@ -81,7 +65,6 @@ export function getUserByUsername(username) {
     return _runUserQuery(query);
 }
 
-// 3. Procurar por ID (Sessão Passport - deserializeUser)
 export function getUserById(userId) {
     return fetchElastic('GET', `/${INDEX_USERS}/_doc/${userId}`)
         .then(body => {
@@ -89,8 +72,6 @@ export function getUserById(userId) {
             return joinUserId(body._source, body._id);
         });
 }
-
-// --- GROUPS (Funcionalidades existentes) ---
 
 function _findGroupDoc(userId, competition, year) {
     const query = {
@@ -196,4 +177,11 @@ export async function removePlayerFromGroup(userId, competition, year, playerId)
 
     await fetchElastic('PUT', `/${INDEX_GROUPS}/_doc/${elasticId}?refresh=wait_for`, groupData);
     return true;
+}
+
+export function getUserByToken(token) {
+    const query = {
+        term: { "token.keyword": token }
+    };
+    return _runUserQuery(query);
 }

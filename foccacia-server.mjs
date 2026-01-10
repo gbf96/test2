@@ -6,15 +6,15 @@ import hbs from 'hbs';
 import cookieParser from 'cookie-parser'; 
 import path from 'path';
 import url from 'url';
-
-// --- NOVAS IMPORTAÇÕES ---
 import session from 'express-session';
 import passport from 'passport';
-// -------------------------
+
 
 import * as foccaciaDataLayer from './data/foccacia-data-elastic.mjs'; 
+import * as foccaciaDataMemLayer from './data/foccacia-data-mem.mjs'; 
 import * as fapiDataLayer from './data/fapi-teams-data.mjs'; 
 import servicesInit from './services/foccacia-services.mjs';
+import servicesApiInit from './services/foccacia-services-api.mjs';
 import webApiInit from './foccacia-web-api.mjs';
 import webSiteInit from './foccacia-web-site.mjs'; 
 
@@ -27,19 +27,21 @@ const PATH_VIEWS = path.join(CURRENT_DIR, 'views');
 const PATH_PARTIALS = path.join(PATH_VIEWS, 'partials'); 
 
 let services;
+let servicesApi;
 let webApi;
 let webSite;
 
 try {
   services = servicesInit(foccaciaDataLayer, fapiDataLayer); 
-  webApi = webApiInit(services);
+  servicesApi = servicesApiInit(foccaciaDataMemLayer, fapiDataLayer); 
+  webApi = webApiInit(servicesApi);
   webSite = webSiteInit(services);
 }
 catch (err) {
   console.error(err);
 }
 
-if (services && webApi && webSite) {
+if (services && webApi && webSite && servicesApi) {
 
   const app = express();
 
@@ -57,43 +59,33 @@ if (services && webApi && webSite) {
   
   hbs.registerHelper('lt', (a, b) => a < b);
   
-  // Middlewares básicos
   app.use(cors()); 
   app.use(express.urlencoded({extended: true})); 
   app.use(express.json()); 
   app.use(cookieParser()); 
 
-  // --- CONFIGURAÇÃO DA SESSÃO E PASSPORT ---
-  
-  // 1. Configurar Express Session
   app.use(session({
-    secret: 'foccacia-secret-key', // Em produção, use uma variável de ambiente
+    secret: 'foccacia-secret-key', 
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 60 * 60 * 1000 } // 1 hora
+    cookie: { maxAge: 60 * 60 * 1000 }
   }));
 
-  // 2. Inicializar Passport
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // 3. Serialização: Guardar apenas o ID do utilizador na sessão
   passport.serializeUser((user, done) => {
-    console.log("--> Serializing User:", user); // ADICIONE ESTE LOG
     done(null, user.userId); 
   });
 
-  // 4. Deserialização: Recuperar o utilizador completo usando o ID
   passport.deserializeUser(async (userId, done) => {
     try {
-      // É necessário garantir que foccaciaDataLayer tem a função getUserById
       const user = await foccaciaDataLayer.getUserById(userId); 
       done(null, user);
     } catch (err) {
       done(err, null);
     }
   });
-  // -----------------------------------------
 
   app.get("/", (req, res) => res.redirect("/groups"));
 
@@ -101,7 +93,7 @@ if (services && webApi && webSite) {
   app.post("/api/users", webApi.createUser);
   app.get("/api/competitions", webApi.listCompetitions);
   
-  // Rotas de Grupos API (Nota: Verifique se webApi.authMiddleware também deve usar passport ou manter tokens)
+  // Rotas de Grupos API
   app.post("/api/groups", webApi.authMiddleware, webApi.createGroup);
   app.get("/api/groups", webApi.authMiddleware, webApi.listGroups);
   app.get("/api/groups/:competition/:year", webApi.authMiddleware, webApi.getGroup);
@@ -121,15 +113,13 @@ if (services && webApi && webSite) {
   app.get("/login", webSite.showLogin);
   app.post("/login", webSite.processLogin);
   
-  // Registo (Novo)
+  // Registo 
   app.get("/register", webSite.showRegister);
   app.post("/register", webSite.processRegister);
 
   // Logout
   app.post('/logout', webSite.logout);
 
-  // Middleware de Proteção para o Site
-  // O webSite.siteAuthMiddleware deve agora verificar req.isAuthenticated()
   app.use("/groups", webSite.siteAuthMiddleware);
 
   // Grupos

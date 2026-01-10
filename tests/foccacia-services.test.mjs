@@ -1,12 +1,12 @@
 import assert from 'assert';
 import { expect } from 'chai';
 
-import servicesInit from '../services/foccacia-services.mjs';
+import servicesInit from '../services/foccacia-services-api.mjs';
 
-import * as elasticDataLayer from '../data/foccacia-data-elastic.mjs';
+import * as memDataLayer from '../data/foccacia-data-mem.mjs'; 
 import * as footballDataMock from '../mocks/fapi-teams-data.mjs';
 
-const services = servicesInit(elasticDataLayer, footballDataMock);
+const services = servicesInit(memDataLayer, footballDataMock);
 
 describe("FOCCACIA Services Unit Tests", () => {
     let userAlice;

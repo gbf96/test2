@@ -12,13 +12,13 @@
 
         <div class="d-grid gap-2">
             <button type="submit" class="btn btn-primary">
-                {{#if isRegister}}Registar{{else}}Entrar{{/if}}
+                {{#if isRegister}}Register{{else}}Login{{/if}}
             </button>
             
             {{#if isRegister}}
-                <a href="/login" class="btn btn-link">Já tenho conta</a>
+                <a href="/login" class="btn btn-link">Already have an account</a>
             {{else}}
-                <a href="/register" class="btn btn-link">Criar conta</a>
+                <a href="/register" class="btn btn-link">Create account</a>
             {{/if}}
         </div>
     </form>
