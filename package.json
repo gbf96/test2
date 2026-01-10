@@ -1,0 +1,28 @@
+{
+  "name": "trab",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "node foccacia-server.mjs",
+    "test": "mocha tests/**/*.test.mjs"
+  },
+  "dependencies": {
+    "chai": "^6.2.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "hbs": "^4.2.0",
+    "node-fetch": "^3.3.2",
+    "passport": "^0.7.0",
+    "swagger-ui-express": "^5.0.1",
+    "yamljs": "^0.3.0"
+  },
+  "devDependencies": {
+    "mocha": "^11.7.5"
+  }
+}

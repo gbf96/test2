@@ -1,0 +1,25 @@
+<div class="card p-4 shadow-sm">
+    <form action="{{#if isRegister}}/register{{else}}/login{{/if}}" method="POST">
+        <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input type="text" name="username" class="form-control" required>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" required>
+        </div>
+
+        <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary">
+                {{#if isRegister}}Registar{{else}}Entrar{{/if}}
+            </button>
+            
+            {{#if isRegister}}
+                <a href="/login" class="btn btn-link">Já tenho conta</a>
+            {{else}}
+                <a href="/register" class="btn btn-link">Criar conta</a>
+            {{/if}}
+        </div>
+    </form>
+</div>

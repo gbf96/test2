@@ -1,0 +1,27 @@
+<div class="col-md-4 mb-3">
+    <div class="card h-100 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title">{{name}}</h5>
+            <h6 class="card-subtitle mb-3 text-muted">Code: {{code}}</h6>
+
+            <form action="/competitions/{{code}}/teams" method="GET">
+                
+                <input type="hidden" name="name" value="{{name}}">
+
+                <div class="mb-2">
+                    <label for="yearSelect{{id}}" class="form-label small text-muted">Select Season:</label>
+                    <select name="year" id="yearSelect{{id}}" class="form-select form-select-sm">
+                        <option value="2025" selected>2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-outline-primary w-100">
+                    View Teams & Players
+                </button>
+            </form>
+
+        </div>
+    </div>
+</div>

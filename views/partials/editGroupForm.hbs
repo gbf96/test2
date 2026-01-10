@@ -1,0 +1,21 @@
+<form action="/groups/{{group.competition}}/{{group.year}}/edit" method="POST">
+    <div class="mb-3">
+        <label class="form-label">Group Name</label>
+        <input type="text" name="name" class="form-control" value="{{group.name}}" required>
+    </div>
+    
+    <div class="mb-3">
+        <label class="form-label">Description</label>
+        <textarea name="description" class="form-control" rows="3" required>{{group.description}}</textarea>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label text-muted">Competition / Year</label>
+        <input type="text" class="form-control" value="{{group.competition}} - {{group.year}}" disabled readonly>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a href="/groups/{{group.competition}}/{{group.year}}" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>

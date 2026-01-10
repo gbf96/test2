@@ -1,0 +1,181 @@
+@baseUrl = http://localhost:3000
+@authToken = token-for-alice
+
+
+###
+# Create User (Alice)
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+    "username": "alice"
+}
+
+
+###
+# Create User (Bob)
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+    "username": "bob"
+}
+
+
+###
+# Try to Create Duplicate User (Error 409)
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+    "username": "bob"
+}
+
+
+###
+# Test Competitions Route
+GET {{baseUrl}}/competitions
+
+
+###
+# Test Protected Route without Token (Error 401)
+GET {{baseUrl}}/groups
+
+
+###
+# Create Group (PL 2023)
+POST {{baseUrl}}/groups
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "name": "My Premier League Group",
+    "description": "My favorite group",
+    "competition": "PL",
+    "year": 2023
+}
+
+
+###
+# Create Group (WC 2022)
+POST {{baseUrl}}/groups
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "name": "My World Cup Group",
+    "description": "My Qatar group",
+    "competition": "WC",
+    "year": 2022
+}
+
+
+###
+# Try to Create Duplicate (Error 409)
+POST {{baseUrl}}/groups
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "name": "Duplicate Group",
+    "description": "This should fail",
+    "competition": "PL",
+    "year": 2023
+}
+
+
+###
+# List My Groups
+GET {{baseUrl}}/groups
+Authorization: Bearer {{authToken}}
+
+
+###
+# Get Specific Group (PL 2023)
+GET {{baseUrl}}/groups/PL/2023
+Authorization: Bearer {{authToken}}
+
+
+###
+# Edit Group (PL 2023)
+PUT {{baseUrl}}/groups/PL/2023
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "name": "Updated Group Name",
+    "description": "Updated description."
+}
+
+
+###
+# Try to Edit Non-Existent Group (Error 404)
+PUT {{baseUrl}}/groups/XX/2000
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "name": "Not found",
+    "description": "Should not work."
+}
+
+
+###
+# Add Player to Group (PL 2023)
+POST {{baseUrl}}/groups/PL/2023/players
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "playerId": 3654,
+    "playerName": "Kevin De Bruyne",
+    "teamId": 65,
+    "teamName": "Manchester City FC"
+}
+
+###
+# Add another Player to Group (PL 2023)
+POST {{baseUrl}}/groups/PL/2023/players
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "playerId": 3222,
+    "playerName": "Ederson",
+    "teamId": 65,
+    "teamName": "Manchester City FC"
+}
+
+
+###
+# Verify Players Added
+GET {{baseUrl}}/groups/PL/2023
+Authorization: Bearer {{authToken}}
+
+
+###
+# Remove Player from Group
+DELETE {{baseUrl}}/groups/PL/2023/players/3654
+Authorization: Bearer {{authToken}}
+
+
+###
+# Verify Player Removed
+GET {{baseUrl}}/groups/PL/2023
+Authorization: Bearer {{authToken}}
+
+
+###
+# Delete Group (PL 2023)
+DELETE {{baseUrl}}/groups/PL/2023
+Authorization: Bearer {{authToken}}
+
+
+###
+# Try to Get Deleted Group
+GET {{baseUrl}}/groups/PL/2023
+Authorization: Bearer {{authToken}}
+
+###
+# Get Teams from a specific competition and season
+GET {{baseUrl}}/teams/PL/2023

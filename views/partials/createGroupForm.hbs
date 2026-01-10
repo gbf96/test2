@@ -1,0 +1,32 @@
+<form action="/groups/new" method="POST">
+    <div class="mb-3">
+        <label class="form-label">Name</label>
+        <input type="text" name="name" class="form-control" value="{{name}}" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Description</label>
+        <textarea name="description" class="form-control" required>{{description}}</textarea>
+    </div>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Competition</label>
+            <select name="competition" class="form-select">
+                {{#each competitions}}
+                    <option value="{{this.code}}">{{this.name}}</option>
+                {{/each}}
+            </select>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Year</label>
+            <select name="year" class="form-select">
+                <option value="2025" selected>2025</option>
+                <option value="2024">2024</option>
+                <option value="2023">2023</option>
+            </select>
+        </div>
+
+    </div>
+    <button type="submit" class="btn btn-success">Create Group</button>
+    <a href="/groups" class="btn btn-secondary">Cancel</a>
+</form>

@@ -1,0 +1,614 @@
+openapi: 3.0.1
+info:
+  title: FOCCACIA API
+  description: API for managing football groups and "Best XI" favorite teams.
+  contact:
+    email: student@isel.pt
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+  - description: Localhost server
+    url: http://localhost:3000
+security: 
+  - bearerAuth: []
+tags:
+  - name: Users
+  - name: Competitions
+  - name: Groups
+  - name: Players
+paths:
+  # --- USERS ---
+  /users:
+    description: Resource for user management
+    post:
+      tags:
+        - Users
+      summary: Create a new user
+      description: Creates a user and returns an access token
+      operationId: createUser
+      security: [] 
+      requestBody:
+        description: User to add
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewUserInput"
+        required: true
+      responses:
+        201:
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserCreated"
+        400: 
+          $ref: "#/components/responses/400BadRequest"
+        409:
+          $ref: "#/components/responses/409Conflict"
+  # --- TEAMS BY COMPETITION AND SEASON ---
+  /teams/{competition}/{year}:
+    description: Resource for retrieving teams within a specific competition/season
+    get:
+      tags:
+        - Teams
+      summary: Get teams and players
+      description: Returns a list of teams for a competition and season, including their squads.
+      operationId: getTeamsWithPlayers
+      security: [] 
+      parameters:
+        - name: competition
+          in: path
+          description: Competition code (e.g., PL)
+          required: true
+          schema:
+            type: string
+        - name: year
+          in: path
+          description: Season year (e.g., 2023)
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: List of teams with players
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TeamWithSquad"
+        400:
+          $ref: "#/components/responses/400BadRequest"
+        429:
+          $ref: "#/components/responses/429TooManyRequests"
+        500:
+          $ref: "#/components/responses/500ServerError"
+        502:
+          $ref: "#/components/responses/502BadGateway"
+  # --- COMPETITIONS ---
+  /competitions:
+    description: Resource for football competitions
+    get:
+      tags:
+        - Competitions
+      summary: List available competitions
+      description: Returns a list of supported leagues and cups.
+      operationId: listCompetitions
+      security: [] 
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Competition"
+        500:
+          $ref: "#/components/responses/500ServerError"
+
+  # --- GROUPS ---
+  /groups:
+    description: Resource for user groups
+    get:
+      tags:
+        - Groups
+      summary: List user groups
+      description: Get all groups belonging to the authenticated user.
+      operationId: listGroups
+      responses:
+        200:
+          description: List of groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Group"
+        401:
+          $ref: "#/components/responses/401Unauthorized"
+        500:
+          $ref: "#/components/responses/500ServerError"
+    post:
+      tags:
+        - Groups
+      summary: Create a group
+      description: Creates a new favorite group for a competition/year.
+      operationId: createGroup
+      requestBody:
+        description: Group details
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewGroupInput"
+      responses:
+        201:
+          description: Group created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+        400:
+          $ref: "#/components/responses/400BadRequest"
+        401:
+          $ref: "#/components/responses/401Unauthorized"
+        409:
+          $ref: "#/components/responses/409Conflict"
+
+  /groups/{competition}/{year}:
+    description: Resource representing a specific Group
+    parameters:
+      - name: competition
+        in: path
+        description: Competition code (e.g., PL)
+        required: true
+        schema:
+          type: string
+      - name: year
+        in: path
+        description: Season year (e.g., 2023)
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - Groups
+      summary: Get group details
+      description: Returns group details and the list of 11 selected players with full info.
+      operationId: getGroup
+      responses:
+        200:
+          description: Group details including full player info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+        401:
+          $ref: "#/components/responses/401Unauthorized"
+        404:
+          $ref: "#/components/responses/404NotFound"
+    put:
+      tags:
+        - Groups
+      summary: Update group
+      description: Update name and description
+      operationId: editGroup
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EditGroupInput"
+      responses:
+        200:
+          description: Group updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+        400:
+          $ref: "#/components/responses/400BadRequest"
+        401:
+          $ref: "#/components/responses/401Unauthorized"
+        404:
+          $ref: "#/components/responses/404NotFound"
+    delete:
+      tags:
+        - Groups
+      summary: Delete group
+      operationId: deleteGroup
+      responses:
+        204:
+          description: Group deleted successfully
+        401:
+          $ref: "#/components/responses/401Unauthorized"
+        404:
+          $ref: "#/components/responses/404NotFound"
+
+  # --- PLAYERS  ---
+  /groups/{competition}/{year}/players:
+    post:
+      tags:
+        - Players
+      summary: Add player to group
+      operationId: addPlayer
+      parameters:
+        - name: competition
+          in: path
+          required: true
+          schema: { type: string }
+        - name: year
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlayerInput"
+      responses:
+        201:
+          description: Player added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+        400:
+          $ref: "#/components/responses/400BadRequest"
+        401:
+          $ref: "#/components/responses/401Unauthorized"
+        404:
+          $ref: "#/components/responses/404NotFound"
+        409:
+          $ref: "#/components/responses/409Conflict"
+
+  /groups/{competition}/{year}/players/{playerId}:
+    delete:
+      tags:
+        - Players
+      summary: Remove player from group
+      operationId: removePlayer
+      parameters:
+        - name: competition
+          in: path
+          required: true
+          schema: { type: string }
+        - name: year
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: playerId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        204:
+          description: Player removed
+        401:
+          $ref: "#/components/responses/401Unauthorized"
+        404:
+          $ref: "#/components/responses/404NotFound"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: UUID
+
+  schemas:
+    # --- DATA MODELS ---
+    NewUserInput:
+      type: object
+      required:
+        - username
+      properties:
+        username:
+          type: string
+          example: "alice"
+    
+    UserCreated:
+      type: object
+      required:
+        - token
+        - userId
+        - username
+      properties:
+        token:
+          type: string
+          format: uuid
+        userId:
+          type: integer
+        username:
+          type: string
+
+    TeamWithSquad:
+      type: object
+      properties:
+        teamName:
+          type: string
+          example: "Manchester City FC"
+        country:
+          type: string
+          example: "England"
+        players:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string, example: "Erling Haaland" }
+              position: { type: string, example: "Centre-Forward" }
+
+    Competition:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Premier League"
+        code:
+          type: string
+          example: "PL"
+
+    NewGroupInput:
+      type: object
+      required:
+        - name
+        - description
+        - competition
+        - year
+      properties:
+        name: 
+          type: string
+        description: 
+          type: string
+        competition: 
+          type: string
+        year: 
+          type: integer
+
+    EditGroupInput:
+      type: object
+      required:
+        - name
+        - description
+      properties:
+        name: 
+          type: string
+        description: 
+          type: string
+
+    Group:
+      type: object
+      properties:
+        ownerId:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "My Dream Team"
+        description:
+          type: string
+          example: "Best of 2023"
+        competition:
+          type: string
+          example: "PL"
+        year:
+          type: integer
+          example: 2023
+        players:
+          type: array
+          description: List of selected players (Max 11)
+          items:
+            $ref: "#/components/schemas/Player"
+
+    # --- PLAYER INPUT ---
+    PlayerInput:
+      type: object
+      required:
+        - playerId
+        - playerName
+        - teamId
+        - teamName
+        - position
+      properties:
+        playerId:
+          type: integer
+          example: 3710
+        playerName:
+          type: string
+          example: "Kevin De Bruyne"
+        teamId: 
+          type: integer
+          example: 65
+        teamName:
+          type: string
+          example: "Manchester City FC"
+
+    # --- PLAYER ---
+    Player:
+      type: object
+      description: Full details of a player in a group.
+      required:
+        - playerId
+        - playerName
+        - teamId
+        - teamName
+        - position
+        - nationality
+        - age
+      properties:
+        playerId:
+          type: integer
+          example: 3710
+        playerName:
+          type: string
+          example: "Kevin De Bruyne"
+        teamId:
+          type: integer
+          example: 65
+        teamName:
+          type: string
+          example: "Manchester City FC"
+        position:
+          type: string
+          example: "Midfield"
+        nationality:
+          type: string
+          example: "Belgium"
+        age:
+          type: integer
+          example: 32
+    
+    # --- ERROR SCHEMAS ---
+
+    
+    # Generic
+    ServerError:
+      type: object
+      properties:
+        code: { type: integer, example: 1 }
+        error: { type: string, example: "Internal Server Error" }
+    InvalidParameter:
+      type: object
+      properties:
+        code: { type: integer, example: 2 }
+        error: { type: string, example: "Invalid parameter" }
+    MissingParameter:
+      type: object
+      properties:
+        code: { type: integer, example: 3 }
+        error: { type: string, example: "Missing required parameter" }
+    InvalidBody:
+      type: object
+      properties:
+        code: { type: integer, example: 4 }
+        error: { type: string, example: "Invalid JSON body" }
+    ExternalApiError:
+      type: object
+      properties:
+        code: { type: integer, example: 15 }
+        error: { type: string, example: "External API Error (500) while fetching..." }
+    RateLimitExceeded:
+      type: object
+      properties:
+        code: { type: integer, example: 16 }
+        error: { type: string, example: "Football API rate limit reached." }
+    
+    # Users
+    InvalidUser:
+      type: object
+      properties:
+        code: { type: integer, example: 5 }
+        error: { type: string, example: "Invalid username" }
+    UserNotFound:
+      type: object
+      properties:
+        code: { type: integer, example: 6 }
+        error: { type: string, example: "User not found" }
+    UserAlreadyExists:
+      type: object
+      properties:
+        code: { type: integer, example: 7 }
+        error: { type: string, example: "User already exists" }
+    MissingToken:
+      type: object
+      properties:
+        code: { type: integer, example: 8 }
+        error: { type: string, example: "Missing token" }
+    NotAuthorized:
+      type: object
+      properties:
+        code: { type: integer, example: 9 }
+        error: { type: string, example: "You are not authorized to perform this action." }
+
+    # Groups
+    GroupNotFound:
+      type: object
+      properties:
+        code: { type: integer, example: 10 }
+        error: { type: string, example: "Group not found" }
+    GroupAlreadyExists:
+      type: object
+      properties:
+        code: { type: integer, example: 11 }
+        error: { type: string, example: "Group already exists" }
+
+    # Players
+    GroupFull:
+      type: object
+      properties:
+        code: { type: integer, example: 12 }
+        error: { type: string, example: "Group is full" }
+    PlayerAlreadyInGroup:
+      type: object
+      properties:
+        code: { type: integer, example: 13 }
+        error: { type: string, example: "Player already in group" }
+    PlayerNotFound:
+      type: object
+      properties:
+        code: { type: integer, example: 14 }
+        error: { type: string, example: "Player not found" }
+
+  responses:
+    400BadRequest:
+      description: "Bad Request"
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: "#/components/schemas/InvalidParameter"
+              - $ref: "#/components/schemas/MissingParameter"
+              - $ref: "#/components/schemas/InvalidBody"
+              - $ref: "#/components/schemas/InvalidUser"
+    
+    401Unauthorized:
+      description: "Unauthorized"
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: "#/components/schemas/MissingToken"
+              - $ref: "#/components/schemas/NotAuthorized"
+
+    404NotFound:
+      description: "Resource not found"
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: "#/components/schemas/UserNotFound"
+              - $ref: "#/components/schemas/GroupNotFound"
+              - $ref: "#/components/schemas/PlayerNotFound"
+
+    409Conflict:
+      description: "Conflict"
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: "#/components/schemas/UserAlreadyExists"
+              - $ref: "#/components/schemas/GroupAlreadyExists"
+              - $ref: "#/components/schemas/GroupFull"
+              - $ref: "#/components/schemas/PlayerAlreadyInGroup"
+    429TooManyRequests:
+      description: "Rate Limit Exceeded"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RateLimitExceeded"
+
+    502BadGateway:
+      description: "External API Error"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ExternalApiError"
+
+    500ServerError:
+      description: "Server Error"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ServerError"

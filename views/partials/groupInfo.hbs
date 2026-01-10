@@ -1,0 +1,24 @@
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/groups">Groups</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{group.name}}</li>
+  </ol>
+</nav>
+
+<div class="card mb-4 bg-light">
+    <div class="card-body">
+        <div class="d-flex justify-content-between">
+            <div>
+                <h3 class="card-title">{{group.name}}</h3>
+                <h6 class="card-subtitle mb-2 text-muted">{{group.competition}} - {{group.year}}</h6>
+                <p class="card-text">{{group.description}}</p>
+            </div>
+            <div>
+                <a href="/groups/{{group.competition}}/{{group.year}}/edit" class="btn btn-outline-secondary">Edit</a>
+                <form action="/groups/{{group.competition}}/{{group.year}}/delete" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Delete this group?')">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
