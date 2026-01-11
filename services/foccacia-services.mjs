@@ -36,19 +36,17 @@ export default function init(foccaciaDataLayer, fapiDataLayer) {
     const existingUser = await foccaciaDataLayer.getUserByUsername(username);
     if (existingUser) throw errors.USER_ALREADY_EXISTS(username);
 
-    // Save with password
     const user = await foccaciaDataLayer.saveUser(username, password);
-    return user; 
-}
-
-// Add a verify credentials helper
-async function verifyUser(username, password) {
-    const user = await foccaciaDataLayer.getUserByUsername(username);
-    if (user && user.password === password) {
-        return user;
+        return user; 
     }
-    return null;
-}
+
+    async function verifyUser(username, password) {
+        const user = await foccaciaDataLayer.getUserByUsername(username);
+        if (user && user.password === password) {
+            return user;
+        }
+        return null;
+    }
 
     async function getUser(username) {
         if (!username) throw errors.MISSING_PARAMETER('username');

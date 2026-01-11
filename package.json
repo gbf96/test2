@@ -8,7 +8,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node foccacia-server.mjs",
-    "test": "mocha tests/**/*.test.mjs"
+    "test": "mocha tests/**/*.test.mjs",
+    "populate": "node populate-data.mjs"
   },
   "dependencies": {
     "chai": "^6.2.1",
